@@ -14,19 +14,31 @@
 
 # layered-cache
 
-<!-- description -->
-
-## Install
-
-```sh
-$ npm install layered-cache --save
-```
+The manager to handle hierarchical cache layers.
 
 ## Usage
 
 ```js
-const layered_cache = require('layered-cache')
+const LRU = require('lru-cache')
+const cache = require('layered-cache')([{
+  new LRU({max: 500})
+}, {
+  async set (key, value) {
+    return save_to_db(key, value)
+  },
+  async get (key) {
+    return get_from_db(key)
+  }
+}, {
+  async get (key) {
+    return fetch_from_remote(key)
+  }
+}])
+
+cache.get('foo')  // 'bar'
 ```
+
+![flow](flow.png)
 
 ## License
 
