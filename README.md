@@ -20,7 +20,8 @@ The manager to handle hierarchical cache layers.
 
 ```js
 const LRU = require('lru-cache')
-const cache = require('layered-cache')([{
+const LCache = require('layered-cache')
+const cache = new LCache([{
   new LRU({max: 500})
 }, {
   async set (key, value) {
@@ -39,6 +40,50 @@ cache.get('foo')  // 'bar'
 ```
 
 ![flow](flow.png)
+
+## class LCache(layers)
+
+- **layers** `Array.<Object|LCache.Layer>` list of subtile layers. A layer must have
+  - a `get(key)` method to get the cache, either sync or async
+  - a `set(key, value)` method to set the cache value, either sync or async. The method is optional only for the last layer.
+  - an optional `has(key)` method to detect if a key is already in the cache.
+
+If the item in the `layers` is not a `LCache.Layer`, it will be wrapped as `LCache.Layer`.
+
+### class LCache.Layer(layer)
+
+The wrapper class to wrap the cache layer into an [`EventEmitter`](https://nodejs.org/dist/latest-v7.x/docs/api/events.html#events_class_eventemitter), and make sure `get`, `set`, `has` methods are all asynchronous methods, and provides:
+
+- a `data` event after the `get` method is executed.
+- an extra `support(method): Boolean` method.
+
+```js
+const delay = require('delay')
+const store = {}
+const layer = new LCache.Layer({
+  get (x) {
+    return delay(100).then(() => x + 1)
+  },
+
+  set (key, value) {
+    store[key] = value
+  },
+
+  has (key) {
+    return key in store
+  }
+})
+.on('data', data => {
+  console.log('on data', data)
+})
+
+layer.support('has')             // true
+layer.has(1).then(console.log)   // prints: false
+
+layer.get(1).then(console.log)
+// prints: on data 2
+// prints: 2
+```
 
 ## License
 
