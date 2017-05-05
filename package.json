@@ -1,6 +1,6 @@
 {
   "name": "layered-cache",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "The manager to handle hierarchical cache layers.",
   "main": "lib/index.js",
   "scripts": {
@@ -16,7 +16,8 @@
     "layered-cache",
     "cache",
     "manager",
-    "layer"
+    "layer",
+    "hierarchical"
   ],
   "engines": {
     "node": ">=4"
