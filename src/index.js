@@ -22,7 +22,7 @@ class CacheManager {
       }
 
       const value = await layer.get(key)
-      if (value === undefined) {
+      if (value === undefined || value === null) {
         continue
       }
 
