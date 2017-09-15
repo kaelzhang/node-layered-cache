@@ -26,6 +26,19 @@ class FakeCache {
   }
 }
 
+class FakeCacheWhenAsync extends FakeCache {
+  async validate (key, value) {
+    return value > 2
+  }
+}
+
+
+class FakeCacheWhenSync extends FakeCache {
+  validate (key, value) {
+    return value > 5
+  }
+}
+
 test('basic', async t => {
   const layers = [
     new LRU(),
@@ -44,4 +57,44 @@ test('basic', async t => {
   t.is(await cache._layers[0].get(1), 2, 'layer 0')
   t.is(await cache._layers[1].get(1), 2, 'layer 1')
   t.is(await cache._layers[2].get(1), 2, 'layer 2')
+})
+
+
+test('when async', async t => {
+  const cache = new LCache([
+    // 0
+    new LRU(),
+    new FakeCacheWhenAsync(),
+    {
+      get (n) {
+        return n + 1
+      }
+    }
+  ])
+
+  t.is(await cache.get(1), 2, 'cache')
+  t.is(await cache._layers[0].get(1), 2, 'layer 0 should cache')
+  t.is(await cache._layers[1].get(1), undefined, 'layer 1 should not cache')
+
+  t.is(await cache.get(2), 3, 'cache')
+  t.is(await cache._layers[0].get(2), 3, 'layer 0 should cache')
+  t.is(await cache._layers[1].get(2), 3, 'layer 1 should cache')
+})
+
+
+test('when async', async t => {
+  const cache = new LCache([
+    // 0
+    new LRU(),
+    new FakeCacheWhenSync(),
+    {
+      get (n) {
+        return n + 1
+      }
+    }
+  ])
+
+  t.is(await cache.get(1), 2, 'cache')
+  t.is(await cache._layers[0].get(1), 2, 'layer 0 should cache')
+  t.is(await cache._layers[1].get(1), undefined, 'layer 1 should not cache')
 })

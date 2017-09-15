@@ -3,3 +3,4 @@
 .appveyor.yml
 .babelrc
 .editorconfig
+package-lock.json

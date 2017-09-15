@@ -13,7 +13,7 @@ class Layer extends EventEmitter {
       return cache
     }
 
-    this._supported = []
+    this._supported = {}
     this._get_queue = new Queue({
       stringify: cache.stringify || JSON.stringify,
       load (key) {
@@ -24,12 +24,16 @@ class Layer extends EventEmitter {
     this._cache = cache
 
     if (typeof cache.has === 'function') {
-      this._supported.push('has')
+      this._supported.has = true
+    }
+
+    if (typeof cache.validate === 'function') {
+      this._supported.validate = true
     }
   }
 
   support (method) {
-    return !!~this._supported.indexOf(method)
+    return !!this._supported[method]
   }
 
   async has (key) {
@@ -44,10 +48,21 @@ class Layer extends EventEmitter {
   }
 
   async set (key, value) {
+    const should = this._supported.validate
+      ? await this._cache.validate(key, value)
+      : true
+
+    if (!should) {
+      return
+    }
+
     return this._cache.set(key, value)
+  }
+
+  async when (key, value) {
+    return this._cache.when(key, value)
   }
 }
 
 
 module.exports = Layer
-
