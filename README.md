@@ -43,15 +43,21 @@ cache.get('foo')  // 'bar'
 
 ## class LCache(layers)
 
-- **layers** `Array.<Object|LCache.Layer>` list of subtile layers. A layer must have
-  - a `get(key)` method to get the cache, either sync or async
-  - a `set(key, value)` method to set the cache value, either sync or async. The method is optional only for the last layer.
-  - an optional `has(key) : Boolean` method to detect if a key is already in the cache.
-  - an optional `validate(key, value) : Boolean` to validate the value and determine whether a value from a low-level cache should be saved.
+- **layers** `Array<LCache.InterfaceLayer>` list of cache layers. A layer must implement the interface of `LCache.InterfaceLayer`. In the other words, a layer should have the following structures, but there is no restriction about which type the layer is. A layer could be a singleton(object), or a class instance(with properties from its prototype).
 
-If the item in the `layers` is not a `LCache.Layer`, it will be wrapped as `LCache.Layer`.
+### interface `LCache.InterfaceLayer`
 
-### class LCache.Layer(layer)
+- **get** `function(key: any): any` method to get the cache, either synchronous or asynchronous(function that returns `Promise` or async function).
+  - **key** `any` the key to retrieve the cached value could be of any type which `layered-cache` never concerns.
+- **set** `function(key, value: any)` method to set the cache value, either sync or async. The method could be optional only for the last layer.
+- **mget** `?function(keys): Array<any>` an optional method to get multiple data by keys
+- **mset** `?function(pairs: Array<{key: any, value: any}>)` an optional method to set multiple values by keys.
+- **has** `?function(key) : Boolean` an optional method to detect if a key is already in the cache, either sync or async.
+- **validate** `?function(key, value) : Boolean` an optional method to validate the value and determine whether a value from a low-level cache should be saved.
+
+### lcache.
+
+## class LCache.Layer(layer)
 
 The wrapper class to wrap the cache layer into an [`EventEmitter`](https://nodejs.org/dist/latest-v7.x/docs/api/events.html#events_class_eventemitter), and make sure `get`, `set`, `has` methods are all asynchronous methods, and provides:
 

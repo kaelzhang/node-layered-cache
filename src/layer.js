@@ -2,10 +2,11 @@
 // - queuing
 // - feature support
 
-const Queue = require('pending-queue')
-const { EventEmitter } = require('events')
+import Queue from 'pending-queue'
+import { EventEmitter } from 'events'
 
-class Layer extends EventEmitter {
+
+export default class Layer extends EventEmitter {
   constructor (cache) {
     super()
 
@@ -23,12 +24,16 @@ class Layer extends EventEmitter {
 
     this._cache = cache
 
-    if (typeof cache.has === 'function') {
-      this._supported.has = true
-    }
+    this._testSupport('has')
+    this._testSupport('validate')
+    this._testSupport('mget')
+    this._testSupport('mset')
+    this._testSupport('set')
+  }
 
-    if (typeof cache.validate === 'function') {
-      this._supported.validate = true
+  _testSupport (name) {
+    if (typeof this._cache[name] === 'function') {
+      this._supported[name] = true
     }
   }
 
@@ -36,15 +41,27 @@ class Layer extends EventEmitter {
     return !!this._supported[method]
   }
 
-  async has (key) {
-    return this._cache.has(key)
-  }
-
   async get (key) {
+    const has = this._supported.has
+      ? await this._cache.has(key)
+      : true
+
+    if (!has) {
+      return
+    }
+
     return this._get_queue.add(key).then(data => {
       this.emit('data', data)
       return data
     })
+  }
+
+  async mget (keys) {
+    if (this._supported.mget) {
+      return this._cache.mget(keys)
+    }
+
+    return Promise.all(keys.map(key => this.get(key)))
   }
 
   async set (key, value) {
@@ -59,10 +76,11 @@ class Layer extends EventEmitter {
     return this._cache.set(key, value)
   }
 
-  async when (key, value) {
-    return this._cache.when(key, value)
+  async mset (pairs) {
+    if (this._supported.mset) {
+      return this._cache.mset(pairs)
+    }
+
+    return Promise.all(pairs.map(({key, value}) => this.set(key, value)))
   }
 }
-
-
-module.exports = Layer
