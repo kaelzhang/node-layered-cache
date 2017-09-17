@@ -41,6 +41,8 @@ export default class Layer extends EventEmitter {
     return !!this._supported[method]
   }
 
+  // The wrapped instance of LCache.Layer
+  // will have no `has` method
   async get (key) {
     const has = this._supported.has
       ? await this._cache.has(key)
@@ -61,7 +63,11 @@ export default class Layer extends EventEmitter {
       return this._cache.mget(keys)
     }
 
-    return Promise.all(keys.map(key => this.get(key)))
+    return keys.length
+      ? keys.length === 1
+        ? [await this.get(keys[0])]
+        : Promise.all(keys.map(key => this.get(key)))
+      : []
   }
 
   async set (key, value) {
@@ -81,6 +87,12 @@ export default class Layer extends EventEmitter {
       return this._cache.mset(pairs)
     }
 
-    return Promise.all(pairs.map(({key, value}) => this.set(key, value)))
+    if (!pairs.length) {
+      return
+    }
+
+    return pairs.length === 1
+      ? this.set(...pairs[0])
+      : Promise.all(pairs.map(pair => this.set(...pair)))
   }
 }

@@ -1,51 +1,102 @@
-const Layer = require('./layer')
+import Layer from './layer'
 
-class CacheManager {
+
+export {
+  Layer
+}
+
+
+const isUnset = value => value === undefined || value === null
+
+export default class LayeredCache {
   constructor (layers) {
     this._layers = layers.map(layer => new Layer(layer))
+    this._length = this._layers.length
+  }
+
+  depth () {
+    return this._length
+  }
+
+  layer (n) {
+    return this._layers[n]
+  }
+
+  async mget (keys) {
+    if (!keys.length) {
+      return []
+    }
+
+    const tasks = []
+    const values = await this._mget(0, keys, tasks)
+
+    if (tasks.length) {
+      await Promise.all(tasks)
+    }
+
+    return values
+  }
+
+  // Recursively read cached values
+  // or deep down to lower cache layer if there is at least a key is not cached.
+  // @param {Array<Promise>} tasks Array of set tasks of the previous job.
+  async _mget (index, keys, tasks) {
+    const layer = this._layers[index]
+    const values = await layer.mget(keys)
+
+    if (++ index >= this._length) {
+      return values
+    }
+
+    const keyIndexes = []
+    const keysOfMissedValues = values.reduce((missed, value, i) => {
+      if (isUnset(value)) {
+        keyIndexes.push(i)
+        missed.push(keys[i])
+      }
+
+      return missed
+    }, [])
+
+    if (!keysOfMissedValues.length) {
+      return values
+    }
+
+    const valuesFromLowerLayer = await this._mget(
+      index, keysOfMissedValues, tasks)
+
+    const keyValuePairsToSet = []
+    valuesFromLowerLayer.forEach((value, i) => {
+      if (isUnset(value)) {
+        return
+      }
+
+      // Update old values
+      values[keyIndexes[i]] = value
+      const key = keysOfMissedValues[i]
+      keyValuePairsToSet.push([key, value])
+    })
+
+    if (keyValuePairsToSet.length) {
+      // Update the cache of the current layer
+      tasks.push(layer.mset(keyValuePairsToSet))
+    }
+
+    return values
   }
 
   async get (key) {
-    let i = 0
-    const length = this._layers.length
-    let layer
-
-    for (; i < length; i ++) {
-      layer = this._layers[i]
-
-      if (layer.support('has')) {
-        if (await layer.has(key)) {
-          return layer.get(key)
-        }
-
-        continue
-      }
-
-      const value = await layer.get(key)
-      if (value === undefined || value === null) {
-        continue
-      }
-
-      await this._update(i, key, value)
-      return value
-    }
-  }
-
-  _update (i, key, value) {
     const tasks = []
-    while (i --) {
-      tasks.push(this._layers[i].set(key, value))
+    const value = await this._mget(0, [key], tasks)[0]
+
+    if (tasks.length) {
+      await Promise.all(tasks)
     }
 
-    return Promise.all(tasks)
+    return value
   }
 
   async set (key, value) {
     return this._update(this._layers.length, key, value)
   }
 }
-
-
-CacheManager.Layer = Layer
-
-module.exports = CacheManager

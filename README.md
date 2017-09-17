@@ -51,9 +51,10 @@ cache.get('foo')  // 'bar'
   - **key** `any` the key to retrieve the cached value could be of any type which `layered-cache` never concerns.
 - **set** `function(key, value: any)` method to set the cache value, either sync or async. The method could be optional only for the last layer.
 - **mget** `?function(keys): Array<any>` an optional method to get multiple data by keys
-- **mset** `?function(pairs: Array<{key: any, value: any}>)` an optional method to set multiple values by keys.
+- **mset** `?function(pairs: Array<[key: any, value: any]>)` an optional method to set multiple values by keys.
 - **has** `?function(key) : Boolean` an optional method to detect if a key is already in the cache, either sync or async.
 - **validate** `?function(key, value) : Boolean` an optional method to validate the value and determine whether a value from a low-level cache should be saved.
+- **stringify** ?function(key)=JSON.stringify` 
 
 ### lcache.
 
