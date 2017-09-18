@@ -82,7 +82,7 @@ class LRU {
   }
 
   set (key, value) {
-    return this._cache.get(JSON.stringify(key))
+    return this._cache.set(JSON.stringify(key), value)
   }
 }
 ```
