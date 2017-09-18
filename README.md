@@ -65,6 +65,28 @@ At least one of `get` or `mget` must be specified, or it will throw an error.
 
 Gets a value by key, and returns `Promise<any>` the retrieved value.
 
+Take `lru-cache` for example, which by default does not support arbitrary type of `key`, but we can use this simple trick:
+
+```js
+import _LRU from 'lru-cache'
+
+class LRU {
+  constructor () {
+    this._cache = new _LRU({
+      max: 10000
+    })
+  }
+
+  get (key) {
+    return this._cache.get(JSON.stringify(key))
+  }
+
+  set (key, value) {
+    return this._cache.get(JSON.stringify(key))
+  }
+}
+```
+
 ### cache.mget(keys)
 
 - **keys** `Array`
