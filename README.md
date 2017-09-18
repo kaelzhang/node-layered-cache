@@ -19,8 +19,9 @@ The manager to handle hierarchical cache layers.
 ## Usage
 
 ```js
-const LRU = require('lru-cache')
-const LCache = require('layered-cache')
+import LRU from 'lru-cache'
+import LCache from 'layered-cache'
+
 const cache = new LCache([
   // LRU cache
   new LRU({max: 100}),
@@ -68,25 +69,25 @@ To make the cache simple enough, **ALL VALUES** that equal to `undefined` or `nu
 
 At least one of `get` or `mget` must be specified, or it will throw an error.
 
-### lcache.get(key)
+### cache.get(key)
 
 - **key** `any` the layered cache could accept arbitrary type of `key`
 
 Gets a value by key, and returns `Promise<any>` the retrieved value.
 
-### lcache.mget(keys)
+### cache.mget(keys)
 
 - **keys** `Array`
 
 Gets an group of values by keys, and returns `Promise<Array>`
 
-### lcache.set(key, value)
+### cache.set(key, value)
 
 Sets key-value to all writable cache layers.
 
 Returns `Promise`
 
-### lcache.mset(pairs)
+### cache.mset(pairs)
 
 - **pairs** `Array<[key, value]>`
 
@@ -95,7 +96,21 @@ Sets multiple key-value pairs.
 Returns `Promise`
 
 ```js
-await lcache.mset(['foo', 'bar'], ['baz', 'quux'])
+await cache.mset(['foo', 'bar'], ['baz', 'quux'])
+```
+
+### cache.depth()
+
+Returns `number` the depth of the cache layers.
+
+### cache.layer(n)
+
+- **n** `number` the index of the layer. The `n` starts with `0`, from high level to low level, which means the layer index of the highest level is `0`
+
+Returns `LCache.Layer`
+
+```js
+console.log(await cache.layer(0).get('foo'))
 ```
 
 ## class LCache.Layer(layer: LCache.InterfaceLayer)
@@ -104,9 +119,13 @@ The wrapper class to wrap the cache layer, and always and only provides FOUR asy
 
 
 ```js
-const delay = require('delay')
+import {
+  Layer
+} from 'layered-cache'
+import delay from 'delay'
+
 const store = {}
-const layer = new LCache.Layer({
+const layer = new Layer({
   get (x) {
     return delay(100).then(() => x + 1)
   },
