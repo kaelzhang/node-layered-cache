@@ -87,13 +87,13 @@ export default class LayeredCache {
 
   async get (key) {
     const tasks = []
-    const value = await this._mget(0, [key], tasks)[0]
+    const value = await this._mget(0, [key], tasks)
 
     if (tasks.length) {
       await Promise.all(tasks)
     }
 
-    return value
+    return value[0]
   }
 
   async set (key, value) {

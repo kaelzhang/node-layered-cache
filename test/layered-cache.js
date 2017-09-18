@@ -41,7 +41,7 @@ class FakeCacheWhenSync extends FakeCache {
   }
 }
 
-test.only('basic', async t => {
+test('basic', async t => {
   const layers = [
     new LRU(),
     new FakeCache(),
@@ -55,12 +55,10 @@ test.only('basic', async t => {
 
   const cache = new LCache(layers)
 
-  const v = await cache.get(1)
-  console.log('v', v)
-  t.is(v, 2, 'cache')
-  // t.is(await cache._layers[0].get(1), 2, 'layer 0')
-  // t.is(await cache._layers[1].get(1), 2, 'layer 1')
-  // t.is(await cache._layers[2].get(1), 2, 'layer 2')
+  t.is(await cache.get(1), 2, 'cache')
+  t.is(await cache._layers[0].get(1), 2, 'layer 0')
+  t.is(await cache._layers[1].get(1), 2, 'layer 1')
+  t.is(await cache._layers[2].get(1), 2, 'layer 2')
 })
 
 

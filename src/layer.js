@@ -17,9 +17,7 @@ export default class Layer extends EventEmitter {
     this._supported = {}
     this._get_queue = new Queue({
       stringify: cache.stringify || JSON.stringify,
-      load (key) {
-        return cache.get(key)
-      }
+      load: key => cache.get(key)
     })
 
     this._cache = cache
@@ -59,14 +57,12 @@ export default class Layer extends EventEmitter {
   }
 
   async mget (keys) {
-    if (this._supported.mget) {
-      return this._cache.mget(keys)
-    }
-
     return keys.length
       ? keys.length === 1
         ? [await this.get(keys[0])]
-        : Promise.all(keys.map(key => this.get(key)))
+        : this._supported.mget
+          ? this._cache.mget(keys)
+          : Promise.all(keys.map(key => this.get(key)))
       : []
   }
 
