@@ -33,12 +33,13 @@ const filterThenBatch = (keys, filter, batch) => {
     })
 
     return batch(...filteredKeys).then(values => {
+      let i = 0
       return availables.map(available => {
         if (!available) {
           return undefined
         }
 
-        return values.pop()
+        return values[i ++]
       })
     })
   })
@@ -55,13 +56,13 @@ export default class Layer {
     this._supported = {}
 
     this._cache = cache
-    this._get = wrap('get', 'mget', cache)
+    this._get = wrap('get', 'mget', cache, true)
 
     if (!this._get) {
       throw error('either get or mget should be implemented.', 'ERR_NO_GET')
     }
 
-    this._has      = wrap('has',      'mhas', cache)
+    this._has      = wrap('has',      'mhas', cache, true)
     this._validate = wrap('validate', 'mvalidate', cache)
     this._set      = wrap('set',      'mset', cache)
   }
@@ -79,6 +80,10 @@ export default class Layer {
   }
 
   async set (key, value) {
+    if (!this._set) {
+      return
+    }
+
     return this._validate
       ? filterThenSingle(
         [key, value], this._validate.single, this._set.single, true)
@@ -86,6 +91,10 @@ export default class Layer {
   }
 
   async mset (...pairs) {
+    if (!this._set) {
+      return
+    }
+
     return this._validate
       ? filterThenBatch(pairs, this._validate.batch, this._set.batch)
       : this._set.batch(...pairs)

@@ -21,47 +21,87 @@ The manager to handle hierarchical cache layers.
 ```js
 const LRU = require('lru-cache')
 const LCache = require('layered-cache')
-const cache = new LCache([{
-  new LRU({max: 500})
-}, {
-  async set (key, value) {
-    return save_to_db(key, value)
+const cache = new LCache([
+  // LRU cache
+  new LRU({max: 100}),
+
+  // databases
+  {
+    set: (key, value) => save_to_db(key, value),
+    get: async key => await get_from_db(key)
   },
-  async get (key) {
-    return get_from_db(key)
+
+  // remote servers
+  {
+    get: key => fetch_from_remote(key)
   }
-}, {
-  async get (key) {
-    return fetch_from_remote(key)
-  }
-}])
+])
 
 cache.get('foo')  // 'bar'
 ```
+
+For the example above, at first, there was no cache for `'foo'` either in LRU cache(layer 0), or in databases(layer 1). And `LCache` tries to fetch the value of `'foo'` from remote server, and gets the value of `'bar'`.
+
+Then, `LCache` saves `{foo: 'value'}` to both layer 0 and layer 1.
+
+If we try to get the value of `'foo'` again, it will hit on layer 0. And after a long time, if the value of `'foo'` have been erased by LRU cache, `LCache` will the the value from databases(layer 1).
+
+To make the cache simple enough, **ALL VALUES** that equal to `undefined` or `null` are treated as **NOT FOUND** in the cache or cache layers.
 
 ![flow](flow.png)
 
 ## class LCache(layers)
 
-- **layers** `Array<LCache.InterfaceLayer>` list of cache layers. A layer must implement the interface of `LCache.InterfaceLayer`. In the other words, a layer should have the following structures, but there is no restriction about which type the layer is. A layer could be a singleton(object), or a class instance(with properties from its prototype).
+- **layers** `Array<LCache.InterfaceLayer|LCache.Layer>` list of cache layers. A layer must implement the interface of `LCache.InterfaceLayer`. In the other words, a layer should have the following structures, but there is no restriction about which type the layer is. A layer could be a singleton(object), or a class instance(with properties from its prototype).
 
 ### interface `LCache.InterfaceLayer`
 
-- **get** `function(key: any): any` method to get the cache, either synchronous or asynchronous(function that returns `Promise` or async function).
+- **get** `?function(key: any): any` method to get the cache, either synchronous or asynchronous(function that returns `Promise` or async function).
   - **key** `any` the key to retrieve the cached value could be of any type which `layered-cache` never concerns.
-- **set** `function(key, value: any)` method to set the cache value, either sync or async. The method could be optional only for the last layer.
 - **mget** `?function(keys): Array<any>` an optional method to get multiple data by keys
+- **set** `?function(key, value: any)` method to set the cache value, either sync or async. The method could be optional only for the last layer.
 - **mset** `?function(pairs: Array<[key: any, value: any]>)` an optional method to set multiple values by keys.
 - **has** `?function(key) : Boolean` an optional method to detect if a key is already in the cache, either sync or async.
+- **mhas** `?function(keys) : Array<Boolean>` an optional method to detect the existence of multiple keys, either sync or async.
 - **validate** `?function(key, value) : Boolean` an optional method to validate the value and determine whether a value from a low-level cache should be saved.
+- **mvalidate** `?function(pairs: Array<[key: any, value: any]>) : Array<Boolean>` an optional method to validate multiple key-value pairs and determine whether a value from a low-level cache should be saved.
 
-### lcache.
+At least one of `get` or `mget` must be specified, or it will throw an error.
 
-## class LCache.Layer(layer)
+### lcache.get(key)
 
-The wrapper class to wrap the cache layer into an [`EventEmitter`](https://nodejs.org/dist/latest-v7.x/docs/api/events.html#events_class_eventemitter), and make sure `get`, `set`, `has` methods are all asynchronous methods, and provides:
+- **key** `any` the layered cache could accept arbitrary type of `key`
 
-- a `data` event after the `get` method is executed, so that the external program could known what is happening
+Gets a value by key, and returns `Promise<any>` the retrieved value.
+
+### lcache.mget(keys)
+
+- **keys** `Array`
+
+Gets an group of values by keys, and returns `Promise<Array>`
+
+### lcache.set(key, value)
+
+Sets key-value to all writable cache layers.
+
+Returns `Promise`
+
+### lcache.mset(pairs)
+
+- **pairs** `Array<[key, value]>`
+
+Sets multiple key-value pairs.
+
+Returns `Promise`
+
+```js
+await lcache.mset(['foo', 'bar'], ['baz', 'quux'])
+```
+
+## class LCache.Layer(layer: LCache.InterfaceLayer)
+
+The wrapper class to wrap the cache layer, and always and only provides FOUR asynchronous methods, `get`, `mget`, `set` and `mset`.
+
 
 ```js
 const delay = require('delay')
@@ -79,12 +119,6 @@ const layer = new LCache.Layer({
     return key in store
   }
 })
-.on('data', data => {
-  console.log('on data', data)
-})
-
-layer.support('has')             // true
-layer.has(1).then(console.log)   // prints: false
 
 layer.get(1).then(console.log)
 // prints: on data 2
