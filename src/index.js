@@ -22,7 +22,7 @@ export default class LayeredCache {
     return this._layers[n]
   }
 
-  async mget (keys) {
+  async mget (...keys) {
     if (!keys.length) {
       return []
     }
@@ -41,8 +41,9 @@ export default class LayeredCache {
   // or deep down to lower cache layer if there is at least a key is not cached.
   // @param {Array<Promise>} tasks Array of set tasks of the previous job.
   async _mget (index, keys, tasks) {
+
     const layer = this._layers[index]
-    const values = await layer.mget(keys)
+    const values = await layer.mget(...keys.map(key => [key]))
 
     if (++ index >= this._length) {
       return values
@@ -79,7 +80,7 @@ export default class LayeredCache {
 
     if (keyValuePairsToSet.length) {
       // Update the cache of the current layer
-      tasks.push(layer.mset(keyValuePairsToSet))
+      tasks.push(layer.mset(...keyValuePairsToSet))
     }
 
     return values
@@ -94,9 +95,5 @@ export default class LayeredCache {
     }
 
     return value[0]
-  }
-
-  async set (key, value) {
-    return this._update(this._layers.length, key, value)
   }
 }

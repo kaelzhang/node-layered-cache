@@ -54,7 +54,6 @@ cache.get('foo')  // 'bar'
 - **mset** `?function(pairs: Array<[key: any, value: any]>)` an optional method to set multiple values by keys.
 - **has** `?function(key) : Boolean` an optional method to detect if a key is already in the cache, either sync or async.
 - **validate** `?function(key, value) : Boolean` an optional method to validate the value and determine whether a value from a low-level cache should be saved.
-- **stringify** ?function(key)=JSON.stringify` 
 
 ### lcache.
 
@@ -63,8 +62,6 @@ cache.get('foo')  // 'bar'
 The wrapper class to wrap the cache layer into an [`EventEmitter`](https://nodejs.org/dist/latest-v7.x/docs/api/events.html#events_class_eventemitter), and make sure `get`, `set`, `has` methods are all asynchronous methods, and provides:
 
 - a `data` event after the `get` method is executed, so that the external program could known what is happening
-- queues all `get` requests with same keys.
-- an extra `support(method): Boolean` method.
 
 ```js
 const delay = require('delay')

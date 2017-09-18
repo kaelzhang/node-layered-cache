@@ -56,9 +56,9 @@ test('basic', async t => {
   const cache = new LCache(layers)
 
   t.is(await cache.get(1), 2, 'cache')
-  t.is(await cache._layers[0].get(1), 2, 'layer 0')
-  t.is(await cache._layers[1].get(1), 2, 'layer 1')
-  t.is(await cache._layers[2].get(1), 2, 'layer 2')
+  t.is(await cache.layer(0).get(1), 2, 'layer 0')
+  t.is(await cache.layer(1).get(1), 2, 'layer 1')
+  t.is(await cache.layer(2).get(1), 2, 'layer 2')
 })
 
 
@@ -75,12 +75,12 @@ test('when async', async t => {
   ])
 
   t.is(await cache.get(1), 2, 'cache')
-  t.is(await cache._layers[0].get(1), 2, 'layer 0 should cache')
-  t.is(await cache._layers[1].get(1), undefined, 'layer 1 should not cache')
+  t.is(await cache.layer(0).get(1), 2, 'layer 0 should cache')
+  t.is(await cache.layer(1).get(1), undefined, 'layer 1 should not cache')
 
   t.is(await cache.get(2), 3, 'cache')
-  t.is(await cache._layers[0].get(2), 3, 'layer 0 should cache')
-  t.is(await cache._layers[1].get(2), 3, 'layer 1 should cache')
+  t.is(await cache.layer(0).get(2), 3, 'layer 0 should cache')
+  t.is(await cache.layer(1).get(2), 3, 'layer 1 should cache')
 })
 
 
@@ -97,6 +97,6 @@ test('when async', async t => {
   ])
 
   t.is(await cache.get(1), 2, 'cache')
-  t.is(await cache._layers[0].get(1), 2, 'layer 0 should cache')
-  t.is(await cache._layers[1].get(1), undefined, 'layer 1 should not cache')
+  t.is(await cache.layer(0).get(1), 2, 'layer 0 should cache')
+  t.is(await cache.layer(1).get(1), undefined, 'layer 1 should not cache')
 })
