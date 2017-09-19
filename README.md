@@ -37,13 +37,15 @@ Then, `LCache` saves `{foo: 'value'}` to both layer 0 and layer 1.
 
 If we try to get the value of `'foo'` again, it will hit on layer 0. And after a long time, if the value of `'foo'` have been erased by LRU cache, `LCache` will the the value from databases(layer 1).
 
-To make the cache simple enough, **ALL VALUES** that equal to `undefined` or `null` are treated as **NOT FOUND** in the cache or cache layers.
+To make the cache simple enough, **ALL VALUES** that equal to `undefined` or `null` are treated as **NOT FOUND** in the cache or cache layers. You could specify the behavior via `options.isNotFound`.
 
 ![flow](flow.png)
 
-## class LCache(layers)
+## class LCache(layers, options)
 
 - **layers** `Array<LCache.InterfaceLayer|LCache.Layer>` list of cache layers. A layer must implement the interface of `LCache.InterfaceLayer`. In the other words, a layer should have the following structures, but there is no restriction about which type the layer is. A layer could be a singleton(object), or a class instance(with properties from its prototype).
+- **options** `Object=`
+  - **isNotFound** `function(value): Boolean` to determine whether a value is not found.
 
 ### interface `LCache.InterfaceLayer`
 

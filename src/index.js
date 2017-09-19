@@ -9,9 +9,13 @@ export {
 const isUnset = value => value === undefined || value === null
 
 export default class LayeredCache {
-  constructor (layers) {
+  constructor (layers, {
+    isNotFound = isUnset
+  } = {}) {
+
     this._layers = layers.map(layer => new Layer(layer))
     this._length = this._layers.length
+    this._isNotFound = isNotFound
   }
 
   depth () {
@@ -50,7 +54,7 @@ export default class LayeredCache {
 
     const keyIndexes = []
     const keysOfMissedValues = values.reduce((missed, value, i) => {
-      if (isUnset(value)) {
+      if (this._isNotFound(value)) {
         keyIndexes.push(i)
         missed.push(keys[i])
       }
@@ -67,7 +71,7 @@ export default class LayeredCache {
 
     const keyValuePairsToSet = []
     valuesFromLowerLayer.forEach((value, i) => {
-      if (isUnset(value)) {
+      if (this._isNotFound(value)) {
         return
       }
 

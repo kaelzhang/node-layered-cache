@@ -258,3 +258,43 @@ test('no set', async t => {
 
   await cache.layer(0).set(1, 1)
 })
+
+
+test('isUnset not specified', async t => {
+  const cache = new LCache([
+    {
+      get (n) {
+        return n % 2
+          ? null
+          : undefined
+      }
+    },
+    {
+      get: () => 1
+    }
+  ])
+
+  t.deepEqual(await cache.mget(1, 2, 3, 4), [1, 1, 1, 1])
+})
+
+
+test('isUnset specified', async t => {
+  const cache = new LCache([
+    {
+      get (n) {
+        return n % 2
+          ? null
+          : undefined
+      }
+    },
+    {
+      get: () => 1
+    }
+  ], {
+    isNotFound (v) {
+      return v === undefined
+    }
+  })
+
+  t.deepEqual(await cache.mget(1, 2, 3, 4), [null, 1, null, 1])
+})
