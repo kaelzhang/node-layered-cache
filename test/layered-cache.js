@@ -318,5 +318,5 @@ test('sync and msync', async t => {
   t.deepEqual(await cache.mget(1, 2), [2, 3], 'cache get')
 
   t.is(await cache.sync(1), 3, 'cache sync return value')
-  t.deepEqual(await cache.msync(2, 3), [4, 5], 'cache sync return value')
+  t.deepEqual(await cache.msync(2, 3, 4), [4, 5, undefined], 'cache sync return value')
 })
