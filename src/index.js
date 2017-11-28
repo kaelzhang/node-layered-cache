@@ -7,6 +7,7 @@ export {
 
 
 const isUnset = value => value === undefined || value === null
+const alwaysNoFound = () => true
 
 export default class LayeredCache {
   constructor (layers, {
@@ -23,7 +24,33 @@ export default class LayeredCache {
   }
 
   layer (n) {
-    return this._layers[n]
+    return n < 0
+      ? this._layers[this._length + n]
+      : this._layers[n]
+  }
+
+  async msync (...keys) {
+    const values = await this.layer(-1).mget(...keys)
+    const pairs = []
+    values.forEach((value, i) => {
+      if (this._isNotFound(value)) {
+        return
+      }
+
+      pairs.push([keys[i], value])
+    })
+
+    const tasks = this._layers
+    .slice(0, -1)
+    .map(layer => layer.mset(...pairs))
+
+    await Promise.all(tasks)
+    return values
+  }
+
+  // Sync
+  sync (key) {
+    return this.msync(key).then(values => values[0])
   }
 
   async mget (...keys) {
@@ -32,7 +59,7 @@ export default class LayeredCache {
     }
 
     const tasks = []
-    const values = await this._mget(0, keys, tasks)
+    const values = await this._traverseGet(0, keys, tasks)
 
     if (tasks.length) {
       await Promise.all(tasks)
@@ -41,10 +68,14 @@ export default class LayeredCache {
     return values
   }
 
+  get (key) {
+    return this.mget(key).then(values => values[0])
+  }
+
   // Recursively read cached values
   // or deep down to lower cache layer if there is at least a key is not cached.
   // @param {Array<Promise>} tasks Array of set tasks of the previous job.
-  async _mget (index, keys, tasks) {
+  async _traverseGet (index, keys, tasks) {
     const layer = this._layers[index]
     const values = await layer.mget(...keys)
 
@@ -66,7 +97,7 @@ export default class LayeredCache {
       return values
     }
 
-    const valuesFromLowerLayer = await this._mget(
+    const valuesFromLowerLayer = await this._traverseGet(
       index, keysOfMissedValues, tasks)
 
     const keyValuePairsToSet = []
@@ -87,17 +118,6 @@ export default class LayeredCache {
     }
 
     return values
-  }
-
-  async get (key) {
-    const tasks = []
-    const value = await this._mget(0, [key], tasks)
-
-    if (tasks.length) {
-      await Promise.all(tasks)
-    }
-
-    return value[0]
   }
 
   _forEach (fn) {

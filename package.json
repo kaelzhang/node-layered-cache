@@ -1,12 +1,13 @@
 {
   "name": "layered-cache",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "The manager to handle hierarchical cache layers.",
   "main": "lib/index.js",
   "scripts": {
     "build": "BABEL_ENV=babel babel src/ -d lib/",
     "test": "BABEL_ENV=ava nyc ava --verbose --timeout=10s",
     "prepublish": "npm run build",
+    "test-no-cov": "BABEL_ENV=ava ava --verbose --timeout=10s",
     "report-cov": "nyc report --reporter=text-lcov > coverage.lcov && codecov"
   },
   "repository": {

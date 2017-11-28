@@ -28,7 +28,7 @@ class FakeCache {
   }
 }
 
-class FakeCacheWhenAsync extends FakeCache {
+class FakeCacheAsyncValidate extends FakeCache {
   constructor (min) {
     super()
 
@@ -41,7 +41,7 @@ class FakeCacheWhenAsync extends FakeCache {
 }
 
 
-class FakeCacheWhenSync extends FakeCache {
+class FakeCacheSyncValidate extends FakeCache {
   constructor (min) {
     super()
 
@@ -87,7 +87,7 @@ test('when async, single / batch', async t => {
   const cache = new LCache([
     // 0
     new LRU(),
-    new FakeCacheWhenAsync(2),
+    new FakeCacheAsyncValidate(2),
     {
       get (n) {
         return n + 1
@@ -115,7 +115,7 @@ test('when sync, single / batch', async t => {
   const cache = new LCache([
     // 0
     new LRU(),
-    new FakeCacheWhenSync(3),
+    new FakeCacheSyncValidate(3),
     {
       get (n) {
         return n + 1
@@ -226,7 +226,7 @@ test('hit from layer 0', async t => {
 
 test('directly set / get to layer', async t => {
   const cache = new LCache([
-    new FakeCacheWhenAsync(3)
+    new FakeCacheAsyncValidate(3)
   ])
 
   await cache.layer(0).set(1, 2)
@@ -259,7 +259,6 @@ test('no set', async t => {
   await cache.layer(0).set(1, 1)
 })
 
-
 test('isUnset not specified', async t => {
   const cache = new LCache([
     {
@@ -276,7 +275,6 @@ test('isUnset not specified', async t => {
 
   t.deepEqual(await cache.mget(1, 2, 3, 4), [1, 1, 1, 1])
 })
-
 
 test('isUnset specified', async t => {
   const cache = new LCache([
@@ -297,4 +295,28 @@ test('isUnset specified', async t => {
   })
 
   t.deepEqual(await cache.mget(1, 2, 3, 4), [null, 1, null, 1])
+})
+
+test('sync and msync', async t => {
+  const l = new LRU
+  const f = new FakeCache
+  const layers = [
+    l,
+    f
+  ]
+
+  const cache = new LCache(layers)
+
+  l.set(1, 2)
+  l.set(2, 3)
+  l.set(3, 4)
+  await f.set(1, 3)
+  await f.set(2, 4)
+  await f.set(3, 5)
+
+  t.is(await cache.get(1), 2, 'cache get')
+  t.deepEqual(await cache.mget(1, 2), [2, 3], 'cache get')
+
+  t.is(await cache.sync(1), 3, 'cache sync return value')
+  t.deepEqual(await cache.msync(2, 3), [4, 5], 'cache sync return value')
 })

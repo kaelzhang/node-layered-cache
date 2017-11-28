@@ -89,7 +89,7 @@ class LRU {
 }
 ```
 
-### cache.mget(keys)
+### cache.mget(...keys)
 
 - **keys** `Array`
 
@@ -101,7 +101,7 @@ Sets key-value to all writable cache layers.
 
 Returns `Promise`
 
-### cache.mset(pairs)
+### cache.mset(...pairs)
 
 - **pairs** `Array<[key, value]>`
 
@@ -112,6 +112,18 @@ Returns `Promise`
 ```js
 await cache.mset(['foo', 'bar'], ['baz', 'quux'])
 ```
+
+### cache.sync(key)
+
+Synchronize the value of key from the most underlying layer up to the upper layers.
+
+Returns the same data type as `cache.get(key)`
+
+### cache.msync(...keys)
+
+Synchronize the value of each key from the most underlying layer up to the upper layers.
+
+Returns the same data type as `cache.mget(...keys)`
 
 ### cache.depth()
 
