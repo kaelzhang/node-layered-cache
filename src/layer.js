@@ -2,7 +2,7 @@
 // - queuing
 // - feature support
 
-import error from 'err-code'
+import error from 'err-object'
 import wrap from 'single-batch'
 
 
@@ -59,7 +59,11 @@ export default class Layer {
     this._get = wrap('get', 'mget', cache, true)
 
     if (!this._get) {
-      throw error('either get or mget should be implemented.', 'ERR_NO_GET')
+      throw error({
+        message: 'either get or mget should be implemented.',
+        name: 'NoGetError',
+        code: 'ERR_NO_GET'
+      })
     }
 
     this._has      = wrap('has',      'mhas', cache, true)

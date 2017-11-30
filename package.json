@@ -1,6 +1,6 @@
 {
   "name": "layered-cache",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "The manager to handle hierarchical cache layers.",
   "main": "lib/index.js",
   "scripts": {
@@ -59,7 +59,7 @@
   },
   "dependencies": {
     "babel-runtime": "^6.26.0",
-    "err-code": "^1.1.2",
+    "err-object": "^1.0.2",
     "pending-queue": "^1.2.0",
     "single-batch": "^1.1.0"
   }
