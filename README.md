@@ -51,11 +51,11 @@ To make the cache simple enough, **ALL VALUES** that equal to `undefined` or `nu
 
 - **get** `?function(key: any): any` method to get the cache, either synchronous or asynchronous(function that returns `Promise` or async function).
   - **key** `any` the key to retrieve the cached value could be of any type which `layered-cache` never concerns.
-- **mget** `?function(keys): Array<any>` an optional method to get multiple data by keys
+- **mget** `?function(...keys): Array<any>` an optional method to get multiple data by keys
 - **set** `?function(key, value: any)` method to set the cache value, either sync or async. The method could be optional only for the last layer.
 - **mset** `?function(pairs: Array<[key: any, value: any]>)` an optional method to set multiple values by keys.
 - **has** `?function(key) : Boolean` an optional method to detect if a key is already in the cache, either sync or async.
-- **mhas** `?function(keys) : Array<Boolean>` an optional method to detect the existence of multiple keys, either sync or async.
+- **mhas** `?function(...keys) : Array<Boolean>` an optional method to detect the existence of multiple keys, either sync or async.
 - **validate** `?function(key, value) : Boolean` an optional method to validate the value and determine whether a value from a low-level cache should be saved.
 - **mvalidate** `?function(pairs: Array<[key: any, value: any]>) : Array<Boolean>` an optional method to validate multiple key-value pairs and determine whether a value from a low-level cache should be saved.
 
