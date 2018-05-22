@@ -320,3 +320,23 @@ test('sync and msync', async t => {
   t.is(await cache.sync(1), 3, 'cache sync return value')
   t.deepEqual(await cache.msync(2, 3, 4), [4, 5, undefined], 'cache sync return value')
 })
+
+test('sync and msync returning all undefined does not call mset on upper layers', async t => {
+  const l = new LRU
+  const f = new FakeCache
+  const layers = [
+    l,
+    f
+  ]
+
+  let called = false
+  f.set(1, undefined)
+  f.set(2, undefined)
+  l.mset = () => {
+    called = true
+  }
+
+  const cache = new LCache(layers)
+  await cache.msync(1, 2)
+  t.is(called, false, 'mset was not called in upper layer')
+})
