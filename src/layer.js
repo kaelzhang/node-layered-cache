@@ -2,7 +2,7 @@
 // - queuing
 // - feature support
 
-const error = require('err-object')
+const {error} = require('err-object')
 const wrap = require('single-batch')
 
 const filterThenSingle = (key, filter, single, spread) => {

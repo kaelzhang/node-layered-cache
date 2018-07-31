@@ -54,3 +54,4 @@ tmp/
 
 # codecov.io
 coverage/
+coverage.lcov
