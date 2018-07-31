@@ -1,15 +1,8 @@
-import Layer from './layer'
-
-
-export {
-  Layer
-}
-
+const Layer = require('./layer')
 
 const isUnset = value => value === undefined || value === null
-const alwaysNoFound = () => true
 
-export default class LayeredCache {
+class LayeredCache {
   constructor (layers, {
     isNotFound = isUnset
   } = {}) {
@@ -132,3 +125,7 @@ export default class LayeredCache {
     return this._forEach(layer => layer.mset(...pairs))
   }
 }
+
+LayeredCache.Layer = Layer
+
+module.exports = LayeredCache

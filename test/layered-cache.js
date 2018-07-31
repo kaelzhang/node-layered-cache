@@ -1,10 +1,9 @@
-import test from 'ava'
-import LRU from 'lru-cache'
-import delay from 'delay'
-import LCache, {
-  Layer
-} from '../src'
+const test = require('ava')
+const LRU = require('lru-cache')
+const delay = require('delay')
+const LCache = require('../src')
 
+const {Layer} = LCache
 
 class FakeCache {
   constructor () {
@@ -18,9 +17,7 @@ class FakeCache {
   }
 
   get (key) {
-    return delay(10).then(() => {
-      return this._data[JSON.stringify(key)]
-    })
+    return delay(10).then(() => this._data[JSON.stringify(key)])
   }
 
   async has (key) {
@@ -103,9 +100,9 @@ test('when async, single / batch', async t => {
   t.is(await cache.layer(0).get(2), 3, 'layer 0 should cache')
   t.is(await cache.layer(1).get(2), 3, 'layer 1 should cache')
 
-  t.deepEqual(await cache.mget(0, -1), [1, 0], 'mget: cache')
-  t.deepEqual(await cache.layer(0).mget(0, -1), [1, 0], 'mget: layer 0 should cache')
-  t.deepEqual(await cache.layer(1).mget(0, -1), [undefined, undefined], 'mget: layer 1 should not cache')
+  t.deepEqual(await cache.mget(0, - 1), [1, 0], 'mget: cache')
+  t.deepEqual(await cache.layer(0).mget(0, - 1), [1, 0], 'mget: layer 0 should cache')
+  t.deepEqual(await cache.layer(1).mget(0, - 1), [undefined, undefined], 'mget: layer 1 should not cache')
 
   t.deepEqual(await cache.mget(), [], 'empty mget')
 })
@@ -127,9 +124,9 @@ test('when sync, single / batch', async t => {
   t.is(await cache.layer(0).get(1), 2, 'layer 0 should cache')
   t.is(await cache.layer(1).get(1), undefined, 'layer 1 should not cache')
 
-  t.deepEqual(await cache.mget(0, -1), [1, 0], 'mget: cache')
-  t.deepEqual(await cache.layer(0).mget(0, -1), [1, 0], 'mget: layer 0 should cache')
-  t.deepEqual(await cache.layer(1).mget(0, -1), [undefined, undefined], 'mget: layer 1 should not cache')
+  t.deepEqual(await cache.mget(0, - 1), [1, 0], 'mget: cache')
+  t.deepEqual(await cache.layer(0).mget(0, - 1), [1, 0], 'mget: layer 0 should cache')
+  t.deepEqual(await cache.layer(1).mget(0, - 1), [undefined, undefined], 'mget: layer 1 should not cache')
 
   t.deepEqual(await cache.mget(), [], 'empty mget')
 })
@@ -137,6 +134,7 @@ test('when sync, single / batch', async t => {
 
 test('error, no get', async t => {
   try {
+    /* eslint no-new: "off" */
     new LCache([{}])
   } catch (e) {
     t.is(e.code, 'ERR_NO_GET', 'code')
@@ -216,8 +214,8 @@ test('hit from layer 0', async t => {
     {
       get: n => n
     },
-    new FakeCache,
-    new FakeCache
+    new FakeCache(),
+    new FakeCache()
   ])
 
   t.is(await cache.get(1), 1, 'value')
@@ -238,7 +236,7 @@ test('directly set / get to layer', async t => {
 
 
 test('cache without has method', async t => {
-  const layer0 = new FakeCache
+  const layer0 = new FakeCache()
   layer0.has = null
 
   const cache = new LCache([layer0])
@@ -298,8 +296,8 @@ test('isUnset specified', async t => {
 })
 
 test('sync and msync', async t => {
-  const l = new LRU
-  const f = new FakeCache
+  const l = new LRU()
+  const f = new FakeCache()
   const layers = [
     l,
     f

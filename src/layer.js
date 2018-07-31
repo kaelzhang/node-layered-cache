@@ -2,9 +2,8 @@
 // - queuing
 // - feature support
 
-import error from 'err-object'
-import wrap from 'single-batch'
-
+const error = require('err-object')
+const wrap = require('single-batch')
 
 const filterThenSingle = (key, filter, single, spread) => {
   return (
@@ -45,8 +44,7 @@ const filterThenBatch = (keys, filter, batch) => {
   })
 }
 
-
-export default class Layer {
+class Layer {
   constructor (cache) {
 
     if (cache instanceof Layer) {
@@ -104,3 +102,5 @@ export default class Layer {
       : this._set.batch(...pairs)
   }
 }
+
+module.exports = Layer
