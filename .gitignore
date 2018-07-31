@@ -51,6 +51,7 @@ reference/
 jscoverage_lib/
 temp/
 tmp/
+*.tgz
 
 # codecov.io
 coverage/
