@@ -1,6 +1,2 @@
-/src
-.travis.yml
-.appveyor.yml
-.babelrc
-.editorconfig
-package-lock.json
+/*
+!src
