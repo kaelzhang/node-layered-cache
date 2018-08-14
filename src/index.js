@@ -33,11 +33,14 @@ class LayeredCache {
       pairs.push([keys[i], value])
     })
 
-    const tasks = this._layers
-    .slice(0, -1)
-    .map(layer => layer.mset(...pairs))
+    if (pairs.length !== 0) {
+      const tasks = this._layers
+        .slice(0, -1)
+        .map(layer => layer.mset(...pairs))
 
-    await Promise.all(tasks)
+      await Promise.all(tasks)
+    }
+
     return values
   }
 
